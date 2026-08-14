@@ -140,8 +140,12 @@ async function createTransacitoncontroller(req, res, next) {
             session.endSession();
             throw txnError;
         }
-        //10. THE USER WITH THE NOTIFICATION OF TRANSACTION COMPLETION 
-        await emailService.sendTransactionSuccessEmail(req.user.email, req.user.name, amount, transaction._id, toUserAccount._id);
+        //10. THE USER WITH THE NOTIFICATION OF TRANSACTION COMPLETION (BOTH SENDER & RECEIVER)
+        Promise.all([
+            emailService.sendTransactionSuccessEmail(req.user.email, req.user.name, amount, transaction._id, toUserAccount._id),
+            toUserAccount.user?.email ? emailService.sendTransactionCreditEmail(toUserAccount.user.email, toUserAccount.user.name, amount, transaction._id, fromUserAccount._id) : Promise.resolve()
+        ]).catch(err => console.error("Email Notification Error:", err.message));
+
         return res.status(201).json({
             message: "Transaction completed and Acknowledge Successfully",
             transaction: transaction

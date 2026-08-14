@@ -88,11 +88,89 @@ const sendRegistrationEmail = async (userEmail, name) => {
     return await sendEmail(userEmail, subject, text, html);
 };
 
-// Successful Transaction ACK
+// Successful Transaction ACK - DEBITED (Sender)
 const sendTransactionSuccessEmail = async (userEmail, name, amount, transactionId, toAccountDetails) => {
-    const subject = `Transaction Successful - ₹${amount} Debited`;
+    const subject = `Transaction Alert - ₹${amount} Debited`;
 
-    const text = `Hello ${name},\n\nYour transaction of ₹${amount} was successful.\n\nTransaction Details:\n- Transaction ID: ${transactionId}\n- Amount: ₹${amount}\n- Status: COMPLETED\n- Date: ${new Date().toLocaleString()}\n${toAccountDetails ? `- Recipient: ${toAccountDetails}\n` : ''}\nIf you did not authorize this transaction, please report it to our 24/7 Security Desk immediately.\n\nBest regards,\nThe Banking System Operations Team`;
+    const text = `Hello ${name},\n\nYour transaction of ₹${amount} was processed successfully.\n\nTransaction Details:\n- Transaction ID: ${transactionId}\n- Amount Debited: ₹${amount}\n- Status: COMPLETED\n- Date: ${new Date().toLocaleString()}\n${toAccountDetails ? `- Recipient Account: ${toAccountDetails}\n` : ''}\nIf you did not authorize this transaction, please report it to our 24/7 Security Desk immediately.\n\nBest regards,\nThe Banking System Operations Team`;
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .header { background: linear-gradient(135deg, #eb3b5a 0%, #fa8231 100%); padding: 25px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        .content { padding: 30px; color: #333333; line-height: 1.6; }
+        .badge-danger { display: inline-block; background-color: #f8d7da; color: #721c24; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; margin-bottom: 15px; }
+        .amount-card { background-color: #fff5f5; border-left: 4px solid #dc3545; padding: 15px 20px; border-radius: 4px; margin: 20px 0; }
+        .amount-title { font-size: 13px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+        .amount-val { font-size: 26px; font-weight: 700; color: #dc3545; margin: 5px 0 0 0; }
+        .details-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .details-table td { padding: 8px 0; font-size: 14px; border-bottom: 1px dashed #eee; }
+        .details-table td.label { color: #6c757d; font-weight: 500; }
+        .details-table td.val { text-align: right; font-weight: 600; color: #333; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🏦 Transaction Confirmation</h1>
+        </div>
+        <div class="content">
+          <div class="badge-danger">✓ Account Debited</div>
+          <h2>Hello, ${name}</h2>
+          <p>Your transaction has been processed successfully. Here are the summary details:</p>
+          
+          <div class="amount-card">
+            <p class="amount-title">DEBITED AMOUNT</p>
+            <p class="amount-val">-₹${amount}</p>
+          </div>
+
+          <table class="details-table">
+            <tr>
+              <td class="label">Transaction ID</td>
+              <td class="val">${transactionId}</td>
+            </tr>
+            <tr>
+              <td class="label">Status</td>
+              <td class="val" style="color: #dc3545;">COMPLETED</td>
+            </tr>
+            ${toAccountDetails ? `
+            <tr>
+              <td class="label">Recipient Account</td>
+              <td class="val">${toAccountDetails}</td>
+            </tr>` : ''}
+            <tr>
+              <td class="label">Date & Time</td>
+              <td class="val">${new Date().toLocaleString()}</td>
+            </tr>
+          </table>
+
+          <p style="margin-top: 25px; font-size: 13px; color: #6c757d;">
+            If you did not authorize this transaction, please contact our 24/7 Security Operations team immediately.
+          </p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} Secure Banking System. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+    return await sendEmail(userEmail, subject, text, html);
+};
+
+// Successful Transaction ACK - CREDITED (Receiver)
+const sendTransactionCreditEmail = async (userEmail, name, amount, transactionId, fromAccountDetails) => {
+    const subject = `Money Received - ₹${amount} Credited to Your Account`;
+
+    const text = `Hello ${name},\n\nYou have received a payment of ₹${amount}.\n\nTransaction Details:\n- Transaction ID: ${transactionId}\n- Amount Credited: ₹${amount}\n- Status: COMPLETED\n- Date: ${new Date().toLocaleString()}\n${fromAccountDetails ? `- Sender Account: ${fromAccountDetails}\n` : ''}\nBest regards,\nThe Banking System Operations Team`;
 
     const html = `
     <!DOCTYPE html>
@@ -122,13 +200,13 @@ const sendTransactionSuccessEmail = async (userEmail, name, amount, transactionI
           <h1>🏦 Transaction Confirmation</h1>
         </div>
         <div class="content">
-          <div class="badge-success">✓ Transaction Successful</div>
+          <div class="badge-success">✓ Account Credited</div>
           <h2>Hello, ${name}</h2>
-          <p>Your transaction has been processed successfully. Here are the summary details:</p>
+          <p>Funds have been successfully credited to your account. Here are the details:</p>
           
           <div class="amount-card">
-            <p class="amount-title">Debited Amount</p>
-            <p class="amount-val">₹${amount}</p>
+            <p class="amount-title">CREDITED AMOUNT</p>
+            <p class="amount-val">+₹${amount}</p>
           </div>
 
           <table class="details-table">
@@ -140,10 +218,10 @@ const sendTransactionSuccessEmail = async (userEmail, name, amount, transactionI
               <td class="label">Status</td>
               <td class="val" style="color: #28a745;">COMPLETED</td>
             </tr>
-            ${toAccountDetails ? `
+            ${fromAccountDetails ? `
             <tr>
-              <td class="label">Recipient Account</td>
-              <td class="val">${toAccountDetails}</td>
+              <td class="label">Sender Account</td>
+              <td class="val">${fromAccountDetails}</td>
             </tr>` : ''}
             <tr>
               <td class="label">Date & Time</td>
@@ -152,7 +230,7 @@ const sendTransactionSuccessEmail = async (userEmail, name, amount, transactionI
           </table>
 
           <p style="margin-top: 25px; font-size: 13px; color: #6c757d;">
-            If you did not authorize this transaction, please contact our 24/7 Security Operations team immediately.
+            Thank you for banking with us. You can log in anytime to view your updated account balance.
           </p>
         </div>
         <div class="footer">
@@ -243,5 +321,6 @@ module.exports = {
     sendEmail,
     sendRegistrationEmail,
     sendTransactionSuccessEmail,
+    sendTransactionCreditEmail,
     sendTransactionFailureEmail,
 };
